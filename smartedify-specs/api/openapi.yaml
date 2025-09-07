@@ -1,0 +1,275 @@
+openapi: 3.1.0
+info:
+  title: SmartEdify APIs
+  version: 0.2.0
+  description: >-
+    Contrato HTTP inicial (contracts-first). Todas las operaciones deben incluir
+    contexto multi-tenant y localización: `X-Tenant-Id` y `X-Local-Country`.
+servers:
+  - url: https://api.example.com
+    description: Servidor de producción (placeholder)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    XTenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      schema:
+        type: string
+        description: Identificador del tenant
+    XLocalCountry:
+      name: X-Local-Country
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: "^[A-Z]{2}$"
+        description: Código país ISO-3166-1 alpha-2
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+  /v1/tenants/{tenant_id}/consents:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    post:
+      summary: Registrar consentimiento
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id:
+                  type: string
+                consent_type:
+                  type: string
+                version:
+                  type: string
+                locale:
+                  type: string
+                granted_at:
+                  type: string
+                  format: date-time
+              required: [user_id, consent_type, version, locale]
+      responses:
+        '201':
+          description: Consentimiento registrado
+    get:
+      summary: Listar consentimientos vigentes
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          required: false
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de consentimientos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id: { type: string }
+                    user_id: { type: string }
+                    consent_type: { type: string }
+                    version: { type: string }
+                    locale: { type: string }
+                    granted_at: { type: string, format: date-time }
+  /v1/tenants/{tenant_id}/consents/revoke:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    post:
+      summary: Revocar consentimiento
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                consent_id:
+                  type: string
+                reason:
+                  type: string
+              required: [consent_id]
+      responses:
+        '200':
+          description: Consentimiento revocado
+  
+  # Backlog (no MVP): Gestión y análisis de reglamentos de condominio
+  /v1/tenants/{tenant_id}/compliance/regulations:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    post:
+      summary: Cargar reglamento de condominio (No MVP)
+      description: Endpoint de backlog para registrar metadatos y referencia de almacenamiento del reglamento.
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                regulation_id: { type: string }
+                title: { type: string }
+                storage_uri: { type: string, format: uri }
+                uploaded_at: { type: string, format: date-time }
+                checksum: { type: string }
+              required: [regulation_id, storage_uri]
+      responses:
+        '202':
+          description: Reglamento registrado (backlog)
+
+  /v1/tenants/{tenant_id}/compliance/analyses:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    post:
+      summary: Iniciar análisis MPC de reglamento (No MVP)
+      description: Desencadena análisis asíncrono; resultado vía polling o evento.
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                regulation_id: { type: string }
+                roles_assumed: { type: array, items: { type: string } }
+              required: [regulation_id]
+      responses:
+        '202':
+          description: Análisis iniciado (backlog)
+
+  /v1/tenants/{tenant_id}/compliance/analyses/{analysis_id}:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    get:
+      summary: Consultar estado y reporte de análisis (No MVP)
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: analysis_id
+          in: path
+          required: true
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estado y/o reporte del análisis (backlog)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, enum: [pending, running, completed, failed] }
+                  report_uri: { type: string, format: uri }
+                  obligations: { type: array, items: { type: string } }
+  /v1/tenants/{tenant_id}/examples:
+    parameters:
+      - $ref: '#/components/parameters/XTenantId'
+      - $ref: '#/components/parameters/XLocalCountry'
+    get:
+      summary: Listar recursos de ejemplo
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista obtenida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+    post:
+      summary: Crear recurso de ejemplo
+      parameters:
+        - name: tenant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              required: [name]
+      responses:
+        '201':
+          description: Creado

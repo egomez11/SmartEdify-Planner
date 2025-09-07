@@ -1,0 +1,115 @@
+asyncapi: '2.6.0'
+info:
+  title: SmartEdify Events
+  version: 0.2.0
+  description: Contrato de eventos inicial (contracts-first).
+defaultContentType: application/json
+servers:
+  production:
+    url: broker.example.com:{port}
+    protocol: kafka
+    variables:
+      port:
+        default: '9092'
+channels:
+  user.events.created:
+    description: Emite cuando se crea un usuario.
+    subscribe:
+      message:
+        name: UserCreated
+        title: Usuario creado
+        headers:
+          type: object
+          properties:
+            x-tenant-id:
+              type: string
+            x-local-country:
+              type: string
+              pattern: "^[A-Z]{2}$"
+        payload:
+          type: object
+          properties:
+            id:
+              type: string
+            email:
+              type: string
+              format: email
+  consent.events.granted:
+    description: Emite cuando se registra un consentimiento.
+    subscribe:
+      message:
+        name: ConsentGranted
+        title: Consentimiento concedido
+        headers:
+          type: object
+          properties:
+            x-tenant-id:
+              type: string
+            x-local-country:
+              type: string
+              pattern: "^[A-Z]{2}$"
+        payload:
+          type: object
+          properties:
+            id: { type: string }
+            user_id: { type: string }
+            consent_type: { type: string }
+            version: { type: string }
+            granted_at: { type: string, format: date-time }
+  consent.events.revoked:
+    description: Emite cuando se revoca un consentimiento.
+    subscribe:
+      message:
+        name: ConsentRevoked
+        title: Consentimiento revocado
+        headers:
+          type: object
+          properties:
+            x-tenant-id:
+              type: string
+            x-local-country:
+              type: string
+              pattern: "^[A-Z]{2}$"
+        payload:
+          type: object
+          properties:
+            id: { type: string }
+            user_id: { type: string }
+            reason: { type: string }
+            revoked_at: { type: string, format: date-time }
+  # Backlog (no MVP): eventos de cumplimiento y comunicación
+  compliance.analysis.completed:
+    description: Emite cuando finaliza el análisis MPC del reglamento (backlog).
+    subscribe:
+      message:
+        name: ComplianceAnalysisCompleted
+        title: Análisis de reglamento completado
+        headers:
+          type: object
+          properties:
+            x-tenant-id: { type: string }
+            x-local-country: { type: string, pattern: "^[A-Z]{2}$" }
+        payload:
+          type: object
+          properties:
+            analysis_id: { type: string }
+            regulation_id: { type: string }
+            report_uri: { type: string, format: uri }
+            obligations: { type: array, items: { type: string } }
+  communication.offer.proposed:
+    description: Comunicación de oferta de asesoría legal basada en el análisis (backlog).
+    subscribe:
+      message:
+        name: CommunicationOfferProposed
+        title: Oferta de asesoría emitida
+        headers:
+          type: object
+          properties:
+            x-tenant-id: { type: string }
+            x-local-country: { type: string, pattern: "^[A-Z]{2}$" }
+        payload:
+          type: object
+          properties:
+            analysis_id: { type: string }
+            offer_id: { type: string }
+            channels: { type: array, items: { type: string } }

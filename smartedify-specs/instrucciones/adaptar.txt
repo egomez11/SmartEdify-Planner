@@ -1,0 +1,144 @@
+
+Método de Planificación SmartEdify – Guía Detallada
+===================================================
+
+Este documento resume el método propuesto para planificar y documentar el desarrollo de SmartEdify.  El objetivo es asegurar que cada microservicio y cada interfaz de usuario se diseñen y revisen antes de escribir una sola línea de código, siguiendo un enfoque **contracts‑first** y la idea de *documentación viva*.  Se basa en las mejores prácticas de la arquitectura de microservicios: dividir la aplicación en componentes independientes que puedan desplegarse de forma autónomahttps://microservices.io/patterns/microservices.html#:~:text=Design%20an%20architecture%20that%20structures,library%29%20subdomains, y mantener la documentación estandarizada, accesible y actualizadahttps://www.cortex.io/post/how-to-strategically-approach-documenting-microservices#:~:text=We%20recommend%20using%20a%20standardized,which%20we%E2%80%99ll%20also%20discuss%20shortly.
+
+1. Objetivo y principios
+------------------------
+
+* **Contracts‑first**: todo nuevo servicio o funcionalidad debe especificarse con un documento de requisitos (PRD), un modelo ACORN, una API REST (OpenAPI), un catálogo de eventos (AsyncAPI) y un plan de pruebas antes de pasar a desarrollo.
+* **Documentación viva**: la documentación se actualiza a medida que evoluciona el sistema. Un cambio funcional no está “hecho” hasta que se actualizan los documentos relevantes y la fecha de modificaciónhttps://vfunction.com/blog/guide-on-documenting-microservices/#:~:text=Creating%20living%20documentation.
+* **Estándar y trazabilidad**: todos los servicios utilizan la misma estructura de carpetas y plantillas para que cualquier miembro del equipo pueda encontrar y comprender la informaciónhttps://www.cortex.io/post/how-to-strategically-approach-documenting-microservices#:~:text=We%20recommend%20using%20a%20standardized,which%20we%E2%80%99ll%20also%20discuss%20shortly.
+* **Cumplimiento por país**: cada servicio debe tener en cuenta el `local_country` del tenant para rutear peticiones al Compliance Service correspondiente.
+
+2. Estructura del repositorio
+-----------------------------
+
+Crea un repositorio llamado `smartedify-specs` (o similar) con la siguiente estructura de carpetas.  Cada elemento está pensado para contener la información necesaria sobre los distintos aspectos del proyecto.
+
+```
+smartedify-specs/
+├─ 00-governance/          # Documentos de gobierno y normas
+│   ├─ RACI.md            # Definición de roles y responsabilidades
+│   ├─ cadencia.md        # Calendario de reuniones y revisiones
+│   └─ nomenclatura.md    # Convenciones de nombres para repos, APIs y eventos
+├─ 01-vision/             # Visión del producto y mapa de dominios
+│   ├─ vision_producto.md
+│   └─ mapa_dominios.md
+├─ 02-adr/                # Architecture Decision Records (ADRs)
+├─ 03-microservicios/     # Un subdirectorio por servicio
+│   ├─ assemblycore/
+│   │   ├─ PRD.md
+│   │   ├─ ACORN.md
+│   │   ├─ openapi.yaml
+│   │   ├─ asyncapi.yaml
+│   │   ├─ data-model.puml
+│   │   ├─ compliance-matrix.md
+│   │   └─ test-plan.md
+│   ├─ auth-service/
+│   ├─ users-service/
+│   ├─ compliance-service/
+│   ├─ docucore/
+│   ├─ billing-subscriptions/
+│   └─ communications-service/
+├─ 04-integracion/        # Contratos globales y flujos
+│   ├─ contratos_rest.md
+│   ├─ catalogo_eventos.md
+│   ├─ politicas_comunicacion.md
+│   └─ secuencias/
+├─ 05-deploy/             # Entornos y configuración de infraestructura
+│   ├─ entornos.md
+│   ├─ seguridad.md
+│   └─ arquitectura_infra.puml
+├─ 06-quality/            # Estrategias y checklists de calidad
+│   ├─ checklist_readiness.md
+│   ├─ test_strategy.md
+│   └─ observabilidad.md
+├─ 07-frontend/           # Documentación de interfaces de usuario
+│   ├─ admin-portal/
+│   │   ├─ PRD.md
+│   │   ├─ information-architecture.md
+│   │   ├─ apis_consumidas.md
+│   │   └─ test-plan.md
+│   ├─ user-portal/
+│   │   ├─ PRD.md
+│   │   ├─ information-architecture.md
+│   │   ├─ apis_consumidas.md
+│   │   └─ test-plan.md
+│   └─ mobile-app/
+│       ├─ PRD.md
+│       ├─ information-architecture.md
+│       ├─ apis_consumidas.md
+│       └─ test-plan.md
+└─ 99-plantillas/         # Plantillas genéricas
+    ├─ PRD.md
+    ├─ ACORN.md
+    ├─ test-plan.md
+    └─ compliance-matrix.md
+```
+
+### Descripción de cada carpeta
+
+- **00-governance/**: define cómo se toman decisiones y quién es responsable de cada parte del proyecto.
+- **01-vision/**: recoge la visión general del producto, público objetivo, KPIs y un mapa de los dominios (bounded contexts).
+- **02-adr/**: contiene un archivo por cada decisión arquitectónica relevante (por ejemplo, elegir Node.js + NestJS, usar PDP centralizado en Compliance, etc.).
+- **03-microservicios/**: cada subdirectorio sigue la plantilla estándar para especificar requisitos, modelo ACORN, APIs, eventos, modelo de datos, matriz de cumplimiento y plan de pruebas del microservicio.
+- **04-integracion/**: lista todos los endpoints REST transversales, los eventos publicados y consumidos, y define políticas de comunicación (timeouts, reintentos, idempotencia e identificadores de correlación).
+- **05-deploy/**: documenta los entornos (dev, stage, prod), sus SLAs/SLOs, la política de seguridad (mTLS, rotación de claves, gestión de secretos) y la arquitectura de infraestructura.
+- **06-quality/**: define la estrategia de pruebas (unitarias, contract/CDC, integración, E2E), criterios de readiness y la guía de observabilidad (métricas, logs y trazas).
+- **07-frontend/**: para cada interfaz (admin portal, user portal y app móvil), especifica su alcance, arquitectura de información, APIs consumidas y un plan de pruebas.
+- **99-plantillas/**: contiene versiones en blanco de las principales plantillas (PRD, ACORN, test-plan, compliance-matrix) para reutilizarlas en nuevos servicios.
+
+3. Plantillas y artefactos clave
+--------------------------------
+
+* **PRD (Product Requirements Document)**: define propósito, alcance, personas, casos de uso, reglas de negocio, objetivos no funcionales y KPIs.  Es el documento de referencia para todas las decisiones.
+* **ACORN**: utiliza la metáfora del árbol (Tierra, Raíces, Tronco, Savia, Ramas, Brotes, Frutos) para descomponer el microservicio en capas de contexto y dependencias.
+* **OpenAPI y AsyncAPI**: describen las interfaces de red del servicio (endpoints REST y eventos). Su presencia en el repositorio permite generar documentación automática y validar contratoshttps://www.cortex.io/post/how-to-strategically-approach-documenting-microservices#:~:text=We%20recommend%20using%20a%20standardized,which%20we%E2%80%99ll%20also%20discuss%20shortly.
+* **Data‑model.puml**: diagrama de clase o entidad-relación que define las tablas y relaciones principales, incluyendo `tenant_id`, `local_country` y otros campos necesarios para la multi‑tenantización.
+* **Compliance‑matrix**: identifica qué decisiones se delegan al PDP (servicio de cumplimiento) y qué se evalúa localmente en el servicio (PEP), así como los contextos requeridos.
+* **Test‑plan**: especifica la estrategia de pruebas, matriz de casos (incluyendo casos de fallo), datos de prueba por país y criterios de aceptación.
+
+4. Fases del método de planificación
+------------------------------------
+
+1. **Incepción y mapeo de dominios**: define la visión general, KPIs y los límites de cada microservicio. Crea los documentos de la carpeta 01‑vision y registra los primeros ADRs.
+2. **Contracts‑first por servicio**: para cada microservicio, redacta el PRD y ACORN; diseña su OpenAPI/AsyncAPI; define el modelo de datos; completa la matriz de cumplimiento y el plan de pruebas. Hasta que estos artefactos no estén aprobados, no se inicia el desarrollo.
+3. **Integración y coreografía**: documenta los endpoints y eventos que atraviesan varios servicios y dibuja diagramas de secuencia para los flujos clave (onboarding, votación, firma, facturación). Define políticas de comunicación (timeouts, reintentos, idempotencia, correlación de mensajes).
+4. **Plan de pruebas**: construye una pirámide de pruebas con unitarias, pruebas de contrato (CDC), integración y end‑to‑end. Establece fixtures de datos (incluyendo países) y criterios de aceptación. Incluye pruebas de seguridad como autenticación y rate‑limit.
+5. **Despliegue y confiabilidad**: detalla entornos, SLOs y SLAs para cada servicio, políticas de seguridad (mTLS, rotación de claves, HSM), configuración de infraestructura y observabilidad.
+6. **Puertas de calidad**: un servicio solo puede pasar a la fase de implementación si su PRD, ACORN, OpenAPI/AsyncAPI, matriz de cumplimiento y plan de pruebas han sido revisados y aprobados.  Este control garantiza consistencia y reduce retrabajo.
+
+5. Configuración del agente CTO
+-------------------------------
+
+Para gestionar este método de manera asistida, puedes crear un agente basado en ChatGPT que actúe como CTO virtual:
+
+1. **Inicio de sesión en ChatGPT**: abre una nueva conversación con ChatGPT.
+2. **Mensaje de sistema (system prompt)**: proporciona un mensaje como:  
+   *“Eres el Agente CTO de SmartEdify. Tu misión es coordinar la documentación, contratos y planes de prueba de todos los microservicios antes de que comience el desarrollo…”*.  Este prompt define el rol del agente y sus responsabilidades.
+3. **Acceso a archivos**: utiliza el conector de Google Drive para buscar y leer documentos de planificación; utiliza las herramientas de ChatGPT (`container`, `computer.sync_file`) para crear y modificar archivos en tu repositorio.
+4. **Automatización de recordatorios**: si lo deseas, programa con la función `automations.create` recordatorios semanales para revisar los PRDs o verificar que se actualicen las especificaciones.
+5. **Ciclo de trabajo**: en cada sesión con el agente, indica qué documentos deben crearse o actualizarse. El agente puede generarlos en Markdown, exportarlos a tu repositorio y sincronizarlos con Drive.  El agente también puede revisar consistencia entre el PRD y el OpenAPI/AsyncAPI y sugerir mejoras.
+6. **Revisión periódica**: establece revisiones semanales o quincenales con tu equipo para validar los cambios. Aprovecha la documentación para facilitar la incorporación de nuevos desarrolladores.
+
+6. Responsabilidades por rol
+---------------------------
+
+- **Superusuario (CTO/Agente)**: crea el tenant, define la estructura de carpetas, mantiene la visión y los ADRs. Gestiona suscripciones y coordina servicios transversales.
+- **Product Owner**: define los requisitos en el PRD, aprueba el alcance y prioriza funcionalidades. Colabora en la redacción del ACORN.
+- **Equipo de desarrollo**: implementa los servicios siguiendo los contratos; mantiene actualizada la documentación y los planes de prueba.
+- **Equipo de QA**: diseña y ejecuta los planes de prueba, valida los criterios de aceptación y colabora en la observabilidad.
+- **Equipo de Compliance**: gestiona políticas y reglas legales por país; actualiza el PDP y elabora la matriz de cumplimiento.
+
+7. Recomendaciones finales
+--------------------------
+
+- Usa herramientas de automatización para generar documentación a partir de las especificaciones (OpenAPI/AsyncAPI) y mantener consistenciahttps://www.cortex.io/post/how-to-strategically-approach-documenting-microservices#:~:text=We%20recommend%20using%20a%20standardized,which%20we%E2%80%99ll%20also%20discuss%20shortlyhttps://vfunction.com/blog/guide-on-documenting-microservices/#:~:text=Automating%20documentation%20updates.
+- Integra la actualización de documentación en la definición de “hecho” de cada tareahttps://vfunction.com/blog/guide-on-documenting-microservices/#:~:text=Creating%20living%20documentation.  
+- Evita la duplicidad de reglas de cumplimiento: centraliza las políticas en el Compliance Service y usa sidecar o caché para minimizar latencias.
+- Implementa métricas de observabilidad (latencia, tasa de aciertos de caché, SLAs de endpoints) para monitorear la salud de cada servicio.
+- Mantén la carpeta de planificación versionada con Git para tener historial y permitir revisiones colaborativas.
+
+Con esta guía, el personal de desarrollo y el agente CTO disponen de un marco claro para planificar, diseñar y documentar cada componente de SmartEdify de forma estructurada y coherente.
